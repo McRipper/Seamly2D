@@ -6,4 +6,4 @@ SUBDIRS = \
     TranslationsTest \
     CollectionTest
 
-unix: SUBDIRS += McpTest
+SUBDIRS += McpTest

@@ -6759,12 +6759,16 @@ QString MainWindow::createDraftBlockName(const QString &text)
 //---------------------------------------------------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    if (m_mcpProbe)
+    if (m_mcp_probe)
     {
-        disconnect(m_mcpProbe, nullptr, this, nullptr);
-        m_mcpProbe->kill(); m_mcpProbe->waitForFinished(1000);
+        disconnect(m_mcp_probe, nullptr, this, nullptr);
+        m_mcp_probe->kill();
+        m_mcp_probe->waitForFinished(1000);
     }
-    if (m_mcpBridge) m_mcpBridge->stop();
+    if (m_mcp_bridge)
+    {
+        m_mcp_bridge->stop();
+    }
     CancelTool();
     CleanLayout();
 

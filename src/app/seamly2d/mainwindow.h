@@ -110,6 +110,10 @@ public:
     virtual ~MainWindow() override;
 
     bool LoadPattern(const QString &fileName, const QString &customMeasureFile = QString());
+    /**
+     * @brief Attach the local MCP bridge and refresh its toolbar status.
+     * @param bridge Bridge owned by this window, or nullptr when unavailable.
+     */
     void setMcpBridge(McpBridge *bridge);
 
 public slots:
@@ -289,15 +293,21 @@ private slots:
 
 private:
     friend class McpBridge;
+
+    /** @brief Create the MCP connection button and its enable, verify and copy actions. */
     void initializeMcpToolBar();
+
+    /** @brief Refresh MCP connection text, accessibility descriptions and menu state. */
     void updateMcpStatus();
+
+    /** @brief Enable the bridge and run an asynchronous, read-only companion check. */
     void verifyMcpConnection();
-    QPointer<McpBridge> m_mcpBridge;
-    QPointer<QToolButton> m_mcpButton;
-    QPointer<QProcess> m_mcpProbe;
-    QAction *m_mcpEnabledAction = nullptr;
-    QString m_mcpProbeError;
-    QString m_mcpLastCheck;
+    QPointer<McpBridge> m_mcp_bridge;
+    QPointer<QToolButton> m_mcp_button;
+    QPointer<QProcess> m_mcp_probe;
+    QAction *m_mcp_enabled_action = nullptr;
+    QString m_mcp_probe_error;
+    QString m_mcp_last_check;
     Q_DISABLE_COPY(MainWindow)
 
     Ui::MainWindow                   *ui;              /// @brief ui keeps information about user interface.

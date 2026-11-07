@@ -348,6 +348,9 @@ win32-g++: LIBS += -L$${PWD}/../../libs/xerces-c/mingw/lib -lxerces-c
 
 win32 {
     copyToDestdir($${PWD}/$$INSTALL_XERCES, $$shell_path($${OUT_PWD}/$$DESTDIR))
+    MCP_ADAPTER = $${OUT_PWD}/../seamly2d_mcp/bin/seamly2d-mcp.exe
+    PRE_TARGETDEPS += $$MCP_ADAPTER
+    QMAKE_POST_LINK += $$QMAKE_COPY $$shell_quote($$shell_path($$MCP_ADAPTER)) $$shell_quote($$shell_path($${OUT_PWD}/$${DESTDIR})) &&
 }
 
 macx{

@@ -9,6 +9,6 @@ DESTDIR = bin
 OBJECTS_DIR = obj
 MOC_DIR = moc
 SOURCES += tst_mcp.cpp ../../app/seamly2d_mcp/mcp_server.cpp
-HEADERS += ../../app/seamly2d_mcp/mcp_server.h
+HEADERS += ../../app/seamly2d_mcp/mcp_server.h ../../app/mcp_local.h
 RESOURCES += ../../app/seamly2d_mcp/resources/mcp.qrc
 RCC_DIR = rcc

@@ -1,0 +1,9 @@
+# Merge into your Codex config and replace the installation path if needed.
+# Click the GUI's MCP button before using document tools.
+[mcp_servers.seamly2d]
+command = 'C:\Program Files\Seamly2D\seamly2d-mcp.exe'
+tool_timeout_sec = 90
+
+# The default pipe is shared automatically by the app and companion for this user.
+# To use a custom pipe, set the same SEAMLY_MCP_SOCKET in both processes, or add:
+# args = ['--socket', '\\.\pipe\seamly2d-mcp-custom']

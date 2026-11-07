@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "seamly2d": {
+      "type": "stdio",
+      "command": "cmd.exe",
+      "args": ["/d", "/c", "scripts\\start-mcp.cmd"],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}

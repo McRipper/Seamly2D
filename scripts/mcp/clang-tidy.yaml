@@ -1,0 +1,8 @@
+Checks: '-*,readability-identifier-naming,readability-braces-around-statements'
+HeaderFilterRegex: '(mcp_local|mcp_server|mcp_bridge|mcp_measurements)\.h$'
+CheckOptions:
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ParameterCase: lower_case
+  readability-identifier-naming.MemberCase: lower_case
+  readability-identifier-naming.GlobalConstantCase: lower_case
+  readability-braces-around-statements.ShortStatementLines: 0

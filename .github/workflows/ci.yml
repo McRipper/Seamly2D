@@ -257,6 +257,41 @@ jobs:
           ${{ matrix.qmake }} Seamly2D.pro -config release CONFIG+=noTests
           nmake
 
+      - name: Build and run native Windows MCP tests
+        if: matrix.msvc-arch == 'x64'
+        run: |
+          Push-Location src\test\McpTest
+          qmake McpTest.pro -config release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          nmake
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Pop-Location
+          $env:SEAMLY_MCP_TEST_APP = (Resolve-Path src\app\seamly2d\bin\seamly2d.exe).Path
+          $env:SEAMLY_MCP_TEST_SERVER = (Resolve-Path src\app\seamly2d\bin\seamly2d-mcp.exe).Path
+          $env:QT_QPA_PLATFORM_PLUGIN_PATH = "$(qmake -query QT_INSTALL_PLUGINS)/platforms"
+          & src\test\McpTest\bin\McpTest.exe
+          exit $LASTEXITCODE
+
+      - name: Verify Windows plugin launcher
+        if: matrix.msvc-arch == 'x64'
+        shell: python
+        run: |
+          import json, os, pathlib, shutil, subprocess, tempfile
+          plugin = pathlib.Path('plugins/seamly2d').resolve()
+          environment = os.environ.copy()
+          environment['SEAMLY2D_APP'] = str(pathlib.Path('src/app/seamly2d/bin').resolve())
+          with tempfile.TemporaryDirectory(prefix='Seamly MCP plugin ') as workspace:
+              root = pathlib.Path(workspace) / 'plugin'
+              shutil.copytree(plugin, root)
+              server = json.loads((root / 'mcp.windows.json').read_text())['mcpServers']['seamly2d']
+              cwd = server['cwd'].replace('${PLUGIN_ROOT}', str(root))
+              message = '{"jsonrpc":"2.0","id":"utf8-è","method":"ping"}\n'
+              result = subprocess.run([server['command'], *server['args']], cwd=cwd,
+                  env=environment, input=message, encoding='utf-8', capture_output=True,
+                  timeout=10, check=True)
+              assert json.loads(result.stdout)['id'] == 'utf8-è', result.stdout
+              assert result.stderr == '', result.stderr
+
       - name: install NSIS
         run: choco install nsis -y
 

@@ -2,6 +2,7 @@
 # This need for correct working file translations.pro
 
 HEADERS += \
+    $$PWD/../../mcp_local.h \
     $$PWD/mcp_bridge.h \
     $$PWD/mcp_measurements.h \
     $$PWD/application_2d.h \

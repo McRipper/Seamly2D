@@ -192,12 +192,12 @@ int main(int argc, char *argv[])
     app.setMainWindow(&window);
 
     // No listener is created unless the user explicitly enables the local bridge.
-    const QString mcpSocket = qEnvironmentVariable("SEAMLY_MCP_SOCKET");
+    const QString mcp_socket = qEnvironmentVariable("SEAMLY_MCP_SOCKET");
     if (Application2D::isGUIMode())
     {
         auto *bridge = new McpBridge(&window);
         window.setMcpBridge(bridge);
-        if (!mcpSocket.isEmpty() && !bridge->start(mcpSocket))
+        if (!mcp_socket.isEmpty() && !bridge->start(mcp_socket))
         {
             qWarning() << "MCP bridge disabled:" << bridge->errorString();
         }

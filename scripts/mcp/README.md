@@ -1,7 +1,8 @@
 # Seamly2D MCP integration
 
 The `seamly2d-mcp` C++/Qt companion controls a running Seamly2D instance on
-**macOS or Linux**. It uses Qt Core/Network and is included in the Mac app bundle.
+**Windows, macOS or Linux**. It uses Qt Core/Network and is included in the Windows
+installation and Mac app bundle.
 A portable plugin packages its launcher and a pattern-authoring skill. The native
 server also serves that skill from compiled resources.
 
@@ -11,6 +12,40 @@ Build the normal qmake app project. On macOS the companion is deployed to
 `Seamly2D.app/Contents/MacOS/seamly2d-mcp` and uses the frameworks inside that app.
 Distribute the whole `.app`. Linux installs the companion to `PREFIX/bin` with
 `make install`; provide the matching Qt libraries as for the GUI.
+On Windows, the normal qmake build produces `seamly2d-mcp.exe` and copies it
+beside `seamly2d.exe`, where it uses the same deployed Qt DLLs. The installer
+includes it on both x64 and ARM64.
+
+### Windows
+
+Install the updated Windows build, open Seamly2D and click **MCP** in the toolbar.
+Then register the companion from PowerShell (adjust the installation path):
+
+```powershell
+codex mcp add seamly2d -- 'C:\Program Files\Seamly2D\seamly2d-mcp.exe'
+```
+
+Alternatively merge [codex.windows.example.toml](codex.windows.example.toml)
+into the client configuration. The app and companion automatically use the same
+default named pipe, derived from the user's home directory. Access is restricted
+to the Windows user running the app with [Qt's `UserAccessOption`](https://doc.qt.io/qt-6/qlocalserver.html#SocketOption-enum); no socket
+directory or Unix permissions are needed.
+
+For an explicit endpoint or multiple app instances, use a different pipe per app:
+
+```powershell
+$env:SEAMLY_MCP_SOCKET = '\\.\pipe\seamly2d-mcp-custom'
+& 'C:\Program Files\Seamly2D\seamly2d.exe'
+codex mcp add seamly2d -- 'C:\Program Files\Seamly2D\seamly2d-mcp.exe' --socket '\\.\pipe\seamly2d-mcp-custom'
+```
+
+Only local `\\.\pipe\NAME` endpoints are accepted. Names may contain letters,
+digits, dots, underscores and hyphens (up to 200 characters, starting with a
+letter or digit). A process lock prevents two Seamly2D instances from listening
+on the same pipe. Windows releases the pipe when the app exits, including after
+a crash. Run app and companion on the same computer and under the same user.
+
+### macOS and Linux
 
 From the repository root, start a development instance explicitly:
 
@@ -41,7 +76,7 @@ The button's own check does not count as a client. Its menu can disable MCP or
 copy the socket path. The path comes from `SEAMLY_MCP_SOCKET`, the last successful
 path, or `~/.seamly2d/mcp/app.sock`; a new default directory is created privately.
 
-For startup through `SEAMLY_MCP_SOCKET`, the socket parent must already exist,
+On macOS/Linux, for startup through `SEAMLY_MCP_SOCKET`, the socket parent must already exist,
 belong to the user, and have mode `0700`.
 Keep its full path under 100 bytes on macOS. Give separate app instances separate
 sockets. A listener starts only through `SEAMLY_MCP_SOCKET` or an explicit click
@@ -66,6 +101,15 @@ SEAMLY_MCP_SOCKET="$HOME/.seamly2d/mcp/app.sock" \
 The companion defaults to this socket when neither `--socket` nor
 `SEAMLY_MCP_SOCKET` is supplied. The plugin launcher uses the installed Mac app
 (or `SEAMLY2D_APP` when set), and `seamly2d-mcp` from PATH on Linux.
+
+For the plugin on Windows, copy `plugins/seamly2d` to a local plugin directory,
+replace that copy's `mcp.json` with `mcp.windows.json`, then install the local
+plugin using your client's marketplace configuration. The default manifest uses
+`/bin/sh` and is for macOS/Linux. The Windows manifest uses the packaged
+`scripts/start-mcp.cmd` launcher, which searches `SEAMLY2D_APP` (an installation
+directory), Program Files, Program Files (x86), then PATH. It does not require
+Python, Node or a Unix shell. Direct registration with the command above avoids
+the plugin manifest setup.
 
 Repo-local discovery is configured in `.agents/plugins/marketplace.json` at the
 repository root. Its source path is relative to the repo root.
@@ -228,6 +272,29 @@ References: [versioning](https://modelcontextprotocol.io/specification/2026-07-2
 [discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover),
 [Skills](https://modelcontextprotocol.io/extensions/skills/overview).
 
+## C++ style
+
+The MCP companion, bridge, helpers and tests use four-space indentation, a
+120-character line limit and braces on separate lines. Expand control-flow
+blocks, including every `for` and `while` body. Variables, parameters, constants
+and data members use `snake_case`; existing public method and protocol names
+retain their spelling. Document methods in Doxygen comments on their declarations,
+and file-local helpers on their definitions.
+
+[clang-format.yaml](clang-format.yaml) defines the formatting rules, and
+[clang-tidy.yaml](clang-tidy.yaml) checks identifier naming and required braces.
+For example, from the repository root:
+
+```sh
+clang-format --style=file:scripts/mcp/clang-format.yaml --dry-run --Werror \
+  src/app/mcp_local.h src/app/seamly2d_mcp/*.cpp src/app/seamly2d_mcp/*.h \
+  src/app/seamly2d/core/mcp_*.cpp src/app/seamly2d/core/mcp_*.h \
+  src/test/McpTest/tst_mcp.cpp
+```
+
+Run clang-tidy with `--config-file=scripts/mcp/clang-tidy.yaml` and a compilation
+database matching the app's Qt installation and compiler configuration.
+
 ## Verification
 
 The native Qt Test suite is included in normal test builds. Configure it with
@@ -253,6 +320,18 @@ Five additional integration cases verify mirror by line and axis, move/rotation
 and true darts against known coordinates, including edits, invalid references,
 generated-object reads, subsequent tool IDs, undo/redo and save/reopen. The Linux
 CI supplies the app/companion paths so these cases run instead of being skipped.
+The Windows x64 CI also builds and runs the MCP suite against the deployed
+companion and GUI, exercising named pipes, endpoint exclusivity, crash recovery
+and binary stdio. ARM64 is cross-built
+and packaged but is not executed on the x64 runner. On Windows the equivalent
+manual test command is:
+
+```powershell
+$env:SEAMLY_MCP_TEST_APP = (Resolve-Path 'src/app/seamly2d/bin/seamly2d.exe').Path
+$env:SEAMLY_MCP_TEST_SERVER = (Resolve-Path 'src/app/seamly2d/bin/seamly2d-mcp.exe').Path
+$env:QT_QPA_PLATFORM_PLUGIN_PATH = "$(qmake -query QT_INSTALL_PLUGINS)/platforms"
+& './src/test/McpTest/bin/McpTest.exe'
+```
 
 Additional integration cases cover individual measurements in cm/mm/inches,
 multisize tables in cm/mm, gradation with cm/mm patterns, protected file writes,
